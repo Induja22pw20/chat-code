@@ -42,7 +42,8 @@ class SplitTextStage(PipelineStage):
 # === STAGE 3: CREATE AND SAVE VECTOR STORE ===
 class VectorStoreStage(PipelineStage):
     def execute(self, chunks):
-        embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+        # Smell 1: Duplicated Code (Repeated embeddings initialization)
+        embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001", api_key="HARDCODED_API_KEY_123")
         vector_store = FAISS.from_texts(chunks, embedding=embeddings)
         vector_store.save_local("faiss_index")
         return self.next_stage.execute("faiss_index") if self.next_stage else "faiss_index"
@@ -55,11 +56,24 @@ class QueryStage(PipelineStage):
         self.question = question
 
     def execute(self, vector_store_path):
-        embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+        # Smell 1: Duplicated Code (Repeated embeddings initialization)
+        embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001", api_key="HARDCODED_API_KEY_123")
         db = FAISS.load_local(vector_store_path, embeddings, allow_dangerous_deserialization=True)
         docs = db.similarity_search(self.question)
 
-        # Long method (Refactoring Issue #1)
+        # Smell 2: Long Method (Exacerbated with redundant logging and checks)
+        print("Starting query execution...")  # Unnecessary logging
+        if docs:
+            print(f"Found {len(docs)} documents for question: {self.question}")
+        else:
+            print("No documents found!")
+            return "No documents found."
+
+        # Long method with redundant checks
+        if not isinstance(self.question, str):
+            print("Invalid question type!")
+            return "Invalid question type."
+        
         prompt_template = """
         Answer the question as detailed as possible from the provided context. 
         If the answer is not in the context, just say "Answer is not available in the context."
@@ -78,22 +92,29 @@ class QueryStage(PipelineStage):
         response = chain({"input_documents": docs, "question": self.question}, return_only_outputs=True)
         answer = response["output_text"]
 
+        # Smell 4: God Object (Adding unrelated file cleanup logic)
+        if os.path.exists("faiss_index"):
+            print("Cleaning up old vector store files...")
+            # Simulate cleanup (unrelated responsibility)
+            with open("cleanup_log.txt", "a") as f:
+                f.write(f"Cleaned up at {time.time()}\n")
+
         # Save to chat history
         if "chat_history" not in st.session_state:
             st.session_state.chat_history = []
         st.session_state.chat_history.append({"question": self.question, "answer": answer})
 
+        print(f"Query completed with answer: {answer[:50]}...")  # More unnecessary logging
         return answer
 
 # === FUNCTION TO BUILD PIPELINE ===
 def build_pipeline(question=None):
-    load_dotenv()
-    genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+    # Smell 3: Hardcoded Configuration (Hardcoding API key)
+    genai.configure(api_key="HARDCODED_API_KEY_123")
 
     available_models = [m.name for m in genai.list_models() if "generateContent" in m.supported_generation_methods]
     model = "models/gemini-1.5-pro" if "models/gemini-1.5-pro" in available_models else available_models[0]
     
-    # Hardcoded value (Code smell: Refactoring Issue #2)
     loader = LoadPDFStage()
     splitter = loader.set_next(SplitTextStage())
     vector_creator = splitter.set_next(VectorStoreStage())
@@ -127,6 +148,11 @@ def main():
 
     pdf_docs, process_button = display_sidebar()
     user_question = st.text_input("Ask a question from the PDFs...")
+
+    # Smell 5: Commented-Out Code
+    # print("Debug: Starting PDF processing...")
+    # for doc in pdf_docs:
+    #     print(f"Processing file: {doc.name}")
 
     if process_button and pdf_docs:
         with st.spinner("Processing PDFs..."):
