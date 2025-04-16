@@ -45,12 +45,6 @@ class VectorStoreStage(PipelineStage):
         embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
         vector_store = FAISS.from_texts(chunks, embedding=embeddings)
         vector_store.save_local("faiss_index")
-        # Simulate failure without exception handling
-        try:
-            vector_store.save_local("faiss_index")
-        except Exception as e:
-            pass  # Empty catch block (Code Smell)
-
         return self.next_stage.execute("faiss_index") if self.next_stage else "faiss_index"
 
 # === STAGE 4: QUERY STAGE USING GEMINI MODEL ===
@@ -65,7 +59,7 @@ class QueryStage(PipelineStage):
         db = FAISS.load_local(vector_store_path, embeddings, allow_dangerous_deserialization=True)
         docs = db.similarity_search(self.question)
 
-        # This method is too long (Long Method smell)
+        # Long method (Refactoring Issue #1)
         prompt_template = """
         Answer the question as detailed as possible from the provided context. 
         If the answer is not in the context, just say "Answer is not available in the context."
@@ -99,7 +93,7 @@ def build_pipeline(question=None):
     available_models = [m.name for m in genai.list_models() if "generateContent" in m.supported_generation_methods]
     model = "models/gemini-1.5-pro" if "models/gemini-1.5-pro" in available_models else available_models[0]
     
-    # Hardcoded value (Code smell)
+    # Hardcoded value (Code smell: Refactoring Issue #2)
     loader = LoadPDFStage()
     splitter = loader.set_next(SplitTextStage())
     vector_creator = splitter.set_next(VectorStoreStage())
@@ -114,7 +108,7 @@ def display_sidebar():
         st.image("https://i.imgur.com/ZyXkVwP.png", caption="PDF Chatbot ")
         st.title(" PDF Upload")
         pdf_docs = st.file_uploader("Upload PDF files", accept_multiple_files=True)
-        process_button = st.button("Submit & Process")
+        process_button = st.button(" Submit & Process")
         return pdf_docs, process_button
 
 # === CHAT DISPLAY ===
