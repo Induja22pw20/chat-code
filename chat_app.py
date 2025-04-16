@@ -104,24 +104,24 @@ def build_pipeline(question=None):
 def display_sidebar():
     with st.sidebar:
         st.image("https://i.imgur.com/ZyXkVwP.png", caption="PDF Chatbot ")
-        st.title(" PDF Upload")
+        st.title("PDF Upload")
         pdf_docs = st.file_uploader("Upload PDF files", accept_multiple_files=True)
         process_button = st.button(" Submit & Process")
         return pdf_docs, process_button
 
 # === CHAT DISPLAY ===
 def display_chat():
-    st.subheader("Chat History")
+    st.subheader("🗨️ Chat History")
     if "chat_history" in st.session_state:
         for chat in reversed(st.session_state.chat_history):
-            st.markdown(f"**Q: {chat['question']}**\n\n {chat['answer']}")
+            st.markdown(f"**Q: {chat['question']}**\n\n💬 {chat['answer']}")
     else:
         st.info("Upload PDFs and ask a question to begin.")
 
 # === MAIN APP ===
 def main():
     st.set_page_config("PDF Chatbot (Pipeline)", page_icon="📄")
-    st.header("PDF Chatbot (Pipeline Architecture)")
+    st.header(" PDF Chatbot (Pipeline Architecture)")
 
     pdf_docs, process_button = display_sidebar()
     user_question = st.text_input("Ask a question from the PDFs...")
@@ -130,13 +130,13 @@ def main():
         with st.spinner("Processing PDFs..."):
             pipeline = build_pipeline()
             pipeline.execute(pdf_docs)
-            st.success("PDFs processed successfully!")
+            st.success(" PDFs processed successfully!")
 
     if user_question:
         with st.spinner("Generating answer..."):
             pipeline = build_pipeline(question=user_question)
             answer = pipeline.execute("faiss_index")
-            st.write("💡 **Answer:**", answer)
+            st.write(" **Answer:**", answer)
 
     display_chat()
 
