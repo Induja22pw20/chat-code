@@ -127,9 +127,9 @@ def build_pipeline(question=None):
 def display_sidebar():
     with st.sidebar:
         st.image("https://i.imgur.com/ZyXkVwP.png", caption="PDF Chatbot 🤖")
-        st.title("📁 PDF Upload")
+        st.title(" PDF Upload")
         pdf_docs = st.file_uploader("Upload PDF files", accept_multiple_files=True)
-        process_button = st.button("📤 Submit & Process")
+        process_button = st.button(" Submit & Process")
         return pdf_docs, process_button
 
 # === CHAT DISPLAY ===
@@ -144,7 +144,7 @@ def display_chat():
 # === MAIN APP ===
 def main():
     st.set_page_config("PDF Chatbot (Pipeline)", page_icon="📄")
-    st.header("🧠 PDF Chatbot (Pipeline Architecture)")
+    st.header(" PDF Chatbot (Pipeline Architecture)")
 
     pdf_docs, process_button = display_sidebar()
     user_question = st.text_input("Ask a question from the PDFs...")
@@ -158,7 +158,7 @@ def main():
         with st.spinner("Processing PDFs..."):
             pipeline = build_pipeline()
             pipeline.execute(pdf_docs)
-            st.success("✅ PDFs processed successfully!")
+            st.success("✅PDFs processed successfully!")
 
     if user_question:
         with st.spinner("Generating answer..."):
@@ -169,7 +169,7 @@ def main():
     display_chat()
 
     st.markdown(
-        "<hr><center><small>Built with ❤️ using Pipeline Architecture by Induja</small></center>",
+        "<hr><center><small>Built with  using Pipeline Architecture by Induja</small></center>",
         unsafe_allow_html=True
     )
 
